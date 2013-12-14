@@ -33,6 +33,48 @@ describe HasEditablePassword do
       user.password = 'secret'
       expect(BCrypt::Password.new(user.password_digest)).to eq 'secret'
     end
+
+    context 'previous_password_digest= exists' do
+      it 'sets the previous_password_digest field' do
+        expect(user).to receive :previous_password_digest=
+        user.password = 'new_secret'
+      end
+    end
+
+    context 'previous_password_digest= does not exist' do
+      before { user.stub(:respond_to?).and_return false }
+
+      it 'does not set the previous_password_digest field' do
+        expect(user).to_not receive :previous_password_digest=
+        user.password = 'new_secret'
+      end
+    end
+
+    context 'password_digest_updated= exists' do
+      it 'sets the password_digest_updated field' do
+        expect(user).to receive(:password_digest_updated=)
+        user.password = 'new_secret'
+      end
+    end
+
+    context 'password_digest_updated= does not exist' do
+      before { user.stub(:respond_to?).and_return false }
+
+      it 'does not set the password_digest_updated field' do
+        expect(user).to_not receive(:password_digest_updated=)
+        user.password = 'new_secret'
+      end
+    end
+
+    it 'only updates the previous_password and password_updated fields once' do
+      user.password = 'new_secret'
+      user.stub(:password_digest_changed?).and_return true
+      user.password = 'banana'
+
+      # Twice just to improve comprension
+      expect(BCrypt::Password.new(user.previous_password_digest)).to_not eq 'new_secret'
+      expect(BCrypt::Password.new(user.previous_password_digest)).to eq 'secret'
+    end
   end
 
   describe '#generate_recovery_token' do

@@ -19,6 +19,8 @@ class User
   attr_accessor :password_digest
   attr_accessor :password_recovery_token
   attr_accessor :password_recovery_token_creation
+  attr_accessor :previous_password_digest
+  attr_accessor :password_digest_updated
 
   def initialize(hash = {})
     hash.each do |k, v|
@@ -26,13 +28,8 @@ class User
     end
   end
 
-  def attributes
-    keys = [ 'password', 'password_confirmation' ]
-    values = keys.map do |k|
-      send(k)
-    end
-
-    Hash[keys.zip(values)]
+  def password_digest_changed?
+    false
   end
 
   def save

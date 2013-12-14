@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.description = 'HasEditablePassword extends has_secure_password with updating capabilities. On password update, the old password or a recovery token is asked.'
   s.author = 'Francesco Boffa'
   s.email = 'fra.boffa@gmail.com'
-  s.homepage = 'http://rubygems.org/gems/has_editable_password'
+  s.homepage = 'https://github.com/AlfaOmega08/has_editable_password'
   s.license = 'MIT'
 
   s.add_runtime_dependency 'activesupport'

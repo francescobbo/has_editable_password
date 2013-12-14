@@ -101,3 +101,33 @@ When submitting a password recovery form:
         end
       end
     end
+
+Old password backup
+-------------------
+
+If you want to keep a backup of the previous password (only the last one), just add another attribute:
+
+    rails g migration add previous_password_digest:string
+
+or
+
+    field :previous_password_digest, type: String
+
+You can use this for reminders or security alerts (the user using an old password is probably a malicious user with a
+stolen password).
+
+Last password change timestamp
+------------------------------
+
+If you need password change timestamp add the following attribute:
+
+    rails g migration add password_digest_updated:date
+
+or
+
+    field :password_digest_updated, type: DateTime
+
+This could be used for password expiration mechanisms or in combination with the backup to tell the user (or attacker):
+
+    Man, you don't use that password anymore! You changed it a month ago!
+
