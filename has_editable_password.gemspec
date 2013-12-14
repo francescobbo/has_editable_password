@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'activesupport'
   s.add_runtime_dependency 'activemodel'
-  s.add_runtime_dependency 'bcrypt-ruby', '~> 3.0.0'
+  s.add_runtime_dependency 'bcrypt-ruby', '>= 3.0.0'
   
   s.files = Dir.glob("lib/**/*")
   s.test_files = Dir.glob("spec/**/*")
