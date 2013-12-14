@@ -33,4 +33,45 @@ describe HasEditablePassword do
       expect(BCrypt::Password.new(user.password_digest)).to eq 'secret'
     end
   end
+
+  describe '#generate_recovery_token' do
+    it 'returns a url-safe base64 string' do
+      token = User.new.generate_recovery_token
+      expect(token).to match(/^[a-z0-9\-_]+=*$/i)
+    end
+
+    it 'returns a 43 bytes token unless specified' do
+      token = User.new.generate_recovery_token
+      expect(token.size).to eq 43
+    end
+
+    it 'returns token larger than specified size' do
+      token = User.new.generate_recovery_token length: 100
+      token.size.should be >= 100
+    end
+
+    it 'sets the password_recovery_token attribute with the hash of the token' do
+      user = User.new
+      token = user.generate_recovery_token
+      expect(BCrypt::Password.new(user.password_recovery_token)).to eq token
+    end
+
+    it 'sets the password_recovery_token_creation to Time.now' do
+      user = User.new
+      user.generate_recovery_token
+      expect(user.password_recovery_token_creation.round).to eq Time.now.round
+    end
+
+    it 'calls #save unless specified' do
+      user = User.new
+      expect(user).to receive(:save)
+      user.generate_recovery_token
+    end
+
+    it 'does not call #save if specified' do
+      user = User.new
+      expect(user).to_not receive(:save)
+      user.generate_recovery_token(save: false)
+    end
+  end
 end

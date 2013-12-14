@@ -17,4 +17,9 @@ class User
 
   # we expect the user to define the password_digest field
   attr_accessor :password_digest
+  attr_accessor :password_recovery_token
+  attr_accessor :password_recovery_token_creation
+
+  def save
+  end
 end
