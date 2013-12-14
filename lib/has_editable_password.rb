@@ -2,6 +2,9 @@ require 'active_support/concern'
 require 'active_model/secure_password'
 require 'securerandom'
 
+##
+# Just include this module into your model to have all of its nice features
+# :)
 module HasEditablePassword
   extend ActiveSupport::Concern
   include ActiveModel::SecurePassword
@@ -14,21 +17,13 @@ module HasEditablePassword
 
     validate :password_change, on: :update, if: :password_digest_changed?
 
-	##
-	# Overrides the has_secure_password implementation to provide nice features:
-	# * Password backup
-	# * Password update timestamp
-	def password=(value)
+    ##
+    # Overrides the has_secure_password implementation to provide nice features:
+    # * Password backup
+    # * Password update timestamp
+    def password=(value)
       @old_password_digest = password_digest unless @old_password_digest or password_digest.blank?
-
-      unless password_digest.blank? or password_digest_changed?
-        self.previous_password_digest = password_digest if respond_to? :previous_password_digest=
-      end
-
-      unless password_digest_changed?
-        self.password_digest_updated = Time.now if respond_to? :password_digest_updated=
-      end
-
+      changing_password
       super(value)
     end
   end
@@ -106,5 +101,24 @@ module HasEditablePassword
   # Sets an error on password unless the current_password or a valid recovery_token is set
   def password_change
     errors[:password] << 'Unauthorized to change the password' unless allow_password_change?
+  end
+
+  def changing_password
+    unless password_digest_changed?
+      update_previous_digest
+      update_digest_timestamp
+    end
+  end
+
+  def update_previous_digest
+    if respond_to?(:previous_password_digest=) and !password_digest.blank?
+      self.previous_password_digest = password_digest
+    end
+  end
+
+  def update_digest_timestamp
+    if respond_to? :password_digest_updated=
+      self.password_digest_updated = Time.now
+    end
   end
 end
