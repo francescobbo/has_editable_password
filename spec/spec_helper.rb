@@ -26,6 +26,16 @@ class User
     end
   end
 
+  def attributes
+    keys = [ 'password', 'password_confirmation' ]
+    values = keys.map do |k|
+      send(k)
+    end
+
+    Hash[keys.zip(values)]
+  end
+
   def save
+    valid?
   end
 end

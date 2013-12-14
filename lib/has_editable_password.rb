@@ -12,6 +12,8 @@ module HasEditablePassword
     attr_writer :current_password
     attr_writer :recovery_token
 
+    validate :password_change, on: :update, if: :password_digest_changed?
+
     def password=(value)
       @old_password_digest = self.password_digest unless @old_password_digest or self.password_digest.blank?
       super(value)
@@ -53,5 +55,13 @@ module HasEditablePassword
     BCrypt::Password.new(self.password_recovery_token) == @recovery_token
   rescue
     false
+  end
+
+  def allow_password_change?
+    valid_recovery_token? or current_password_match?
+  end
+
+  def password_change
+    errors[:password] << 'Unauthorized to change the password' unless allow_password_change?
   end
 end

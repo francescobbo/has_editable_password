@@ -1,32 +1,32 @@
 require 'spec_helper.rb'
 
 describe HasEditablePassword do
+  let(:user) { User.new(password: 'secret', password_confirmation: 'secret') }
+
   # Since this is an extension of has_secure_password ensure that all the
   # methods defined by has_secure_password are still there
 
   it 'has an #authenticate method' do
-    expect(User.new.respond_to? :authenticate).to be_true
+    expect(user).to respond_to :authenticate
   end
 
   it 'has a #password= method' do
-    expect(User.new).to respond_to :password=
+    expect(user).to respond_to :password=
   end
 
   it 'has a password_confirmation= method' do
-    expect(User.new).to respond_to :password=
+    expect(user).to respond_to :password=
   end
 
   # Additional accessors for current password or password recovery token
 
   it 'has a #current_password= method' do
-    expect(User.new).to respond_to :current_password=
+    expect(user).to respond_to :current_password=
   end
 
   it 'has a #recovery_token= method' do
-    expect(User.new).to respond_to :recovery_token=
+    expect(user).to respond_to :recovery_token=
   end
-
-  let(:user) { User.new(password: 'secret') }
 
   describe '#password=' do
     it 'sets the password_digest field to the hash of the password' do
@@ -152,6 +152,71 @@ describe HasEditablePassword do
 
           it 'returns true' do
             expect(user.current_password_match?).to be_false
+          end
+        end
+      end
+    end
+  end
+
+  describe 'password editing validation' do
+    let(:user) { User.new(password: 'banana', password_confirmation: 'banana') }
+
+    context 'on create' do
+      it 'is valid' do
+        expect(user.valid?).to be_true
+      end
+    end
+
+    context 'on update' do
+      context 'password_digest was not touched' do
+        before { user.stub(:password_digest_changed?).and_return false }
+
+        it 'is valid' do
+          expect(user.valid?(:update)).to be_true
+        end
+      end
+
+      context 'password_digest was modified' do
+        before { user.stub(:password_digest_changed?).and_return true }
+
+        context 'a valid token is set' do
+          let(:token) { user.generate_recovery_token }
+
+          it 'is valid' do
+            user.recovery_token = token
+            expect(user.valid?(:update)).to be_true
+          end
+        end
+
+        context 'an invalid valid token is set' do
+          let(:token) do
+            user.generate_recovery_token
+            "deadbeef"
+          end
+
+          it 'is not valid' do
+            user.recovery_token = token
+            expect(user.valid?(:update)).to be_false
+          end
+        end
+
+        context 'the current_password is valid' do
+          it 'is valid' do
+            user.current_password = 'banana'
+            expect(user.valid?(:update)).to be_true
+          end
+        end
+
+        context 'the current_password is invalid' do
+          it 'is valid' do
+            user.current_password = 'b4n4n4'
+            expect(user.valid?(:update)).to be_false
+          end
+        end
+
+        context 'neither is set' do
+          it 'is not valid' do
+            expect(user.valid?(:update)).to be_false
           end
         end
       end
