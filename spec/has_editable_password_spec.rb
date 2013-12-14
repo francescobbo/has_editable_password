@@ -26,7 +26,7 @@ describe HasEditablePassword do
     expect(User.new).to respond_to :recovery_token=
   end
 
-  let(:user) { User.new }
+  let(:user) { User.new(password: 'secret') }
 
   describe '#password=' do
     it 'sets the password_digest field to the hash of the password' do
@@ -107,6 +107,52 @@ describe HasEditablePassword do
           token = user.generate_recovery_token
           user.recovery_token = token
           expect(user.valid_recovery_token?).to be_true
+        end
+      end
+    end
+  end
+
+  describe '#current_password_match?' do
+    context 'current_password is not been set' do
+      it 'returns false' do
+        expect(user.current_password_match?).to be_false
+      end
+    end
+
+    context 'current_password is set' do
+      context 'current_password does not match' do
+        before { user.current_password = 's3cret' }
+
+        it 'returns false' do
+          expect(user.current_password_match?).to be_false
+        end
+      end
+
+      context 'current_password does match' do
+        before { user.current_password = 'secret' }
+
+        it 'returns true' do
+          expect(user.current_password_match?).to be_true
+        end
+      end
+
+      context 'password_digest has been modified' do
+        before { user.password = 'new_secret' }
+
+        context 'current_password is set to the previous password' do
+          before { user.current_password = 'secret' }
+
+          it 'returns true' do
+            expect(user.current_password_match?).to be_true
+          end
+        end
+
+        context 'current_password is set to the new password' do
+          before { user.current_password = 'new_secret' }
+
+          it 'returns true' do
+            expect(user.current_password_match?).to be_false
+          end
         end
       end
     end

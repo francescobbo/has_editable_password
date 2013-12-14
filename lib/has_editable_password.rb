@@ -11,6 +11,11 @@ module HasEditablePassword
 
     attr_writer :current_password
     attr_writer :recovery_token
+
+    def password=(value)
+      @old_password_digest = self.password_digest unless @old_password_digest or self.password_digest.blank?
+      super(value)
+    end
   end
 
   def generate_recovery_token(options = {})
@@ -23,6 +28,19 @@ module HasEditablePassword
 
   def valid_recovery_token?
     recovery_token_match? and !recovery_token_expired?
+  end
+
+  def current_password_match?
+    if @current_password
+      if @old_password_digest
+        BCrypt::Password.new(@old_password_digest) == @current_password
+      else
+        # almost same as #authenticate (returns true instead of the object)
+        BCrypt::Password.new(self.password_digest) == @current_password
+      end
+    else
+      false
+    end
   end
 
   private

@@ -20,6 +20,12 @@ class User
   attr_accessor :password_recovery_token
   attr_accessor :password_recovery_token_creation
 
+  def initialize(hash = {})
+    hash.each do |k, v|
+      send("#{k}=", v)
+    end
+  end
+
   def save
   end
 end
