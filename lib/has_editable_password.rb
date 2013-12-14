@@ -20,4 +20,20 @@ module HasEditablePassword
     save unless options.delete(:save) == false
     token
   end
+
+  def valid_recovery_token?
+    recovery_token_match? and !recovery_token_expired?
+  end
+
+  private
+  def recovery_token_expired?
+    # 86400 = seconds in a day
+    (Time.now - self.password_recovery_token_creation).round >= 86400
+  end
+
+  def recovery_token_match?
+    BCrypt::Password.new(self.password_recovery_token) == @recovery_token
+  rescue
+    false
+  end
 end
