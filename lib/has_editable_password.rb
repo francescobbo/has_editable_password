@@ -14,7 +14,11 @@ module HasEditablePassword
 
     validate :password_change, on: :update, if: :password_digest_changed?
 
-    def password=(value)
+	##
+	# Overrides the has_secure_password implementation to provide nice features:
+	# * Password backup
+	# * Password update timestamp
+	def password=(value)
       @old_password_digest = password_digest unless @old_password_digest or password_digest.blank?
 
       unless password_digest.blank? or password_digest_changed?
@@ -36,11 +40,11 @@ module HasEditablePassword
   # +password_recovery_token_creation+ to the current time.
   # Unless specified it calls +save+ to store the token in the database.
   #
-  # options[:length] - this is the length of the SecureRandom string generated
-  #   as the token. Since the token is base64_encoded it will be longer than
-  #   that. Default is 32.
-  # options[:save] - you can use this if you don't want save to be called.
-  #   generate_recovery_token(save: false)
+  # * +:length+ - this is the length of the SecureRandom string generated
+  # as the token. Since the token is base64_encoded it will be longer than
+  # that. Default is 32.
+  # * +:save+ - you can use this if you don't want save to be called.
+  #     generate_recovery_token(save: false)
   #
   def generate_recovery_token(options = {})
     token = SecureRandom.urlsafe_base64(options.delete(:length) || 32)
@@ -75,21 +79,31 @@ module HasEditablePassword
   end
 
   private
+  # True if the token has been updated more than 24 hours ago
   def recovery_token_expired?
     # 86400 = seconds in a day
     (Time.now - self.password_recovery_token_creation).round >= 86400
   end
 
+  ##
+  # True if recovery_token matches the stored token.
+  # False if there is no stored token too.
   def recovery_token_match?
     BCrypt::Password.new(self.password_recovery_token) == @recovery_token
   rescue
     false
   end
 
+  ##
+  # True if a valid recovery token or current password have been set
+  #
   def allow_password_change?
     valid_recovery_token? or current_password_match?
   end
 
+  ##
+  # Validation called on :update when the password_digest is touched.
+  # Sets an error on password unless the current_password or a valid recovery_token is set
   def password_change
     errors[:password] << 'Unauthorized to change the password' unless allow_password_change?
   end
