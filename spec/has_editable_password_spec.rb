@@ -51,6 +51,10 @@ describe HasEditablePassword do
     end
 
     context 'password_digest_updated= exists' do
+      it 'sets password_digest_updated on create too' do
+        expect(user.password_digest_updated).to_not be_nil
+      end
+
       it 'sets the password_digest_updated field' do
         expect(user).to receive(:password_digest_updated=)
         user.password = 'new_secret'

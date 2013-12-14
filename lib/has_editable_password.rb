@@ -19,6 +19,9 @@ module HasEditablePassword
 
       unless password_digest.blank? or password_digest_changed?
         self.previous_password_digest = password_digest if respond_to? :previous_password_digest=
+      end
+
+      unless password_digest_changed?
         self.password_digest_updated = Time.now if respond_to? :password_digest_updated=
       end
 
