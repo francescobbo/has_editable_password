@@ -246,6 +246,13 @@ describe HasEditablePassword do
             user.recovery_token = token
             expect(user.valid?(:update)).to be_true
           end
+
+          it 'clears the stored token after use' do
+            user.recovery_token = token
+            user.password = 'new_secret'
+            user.valid?(:update)
+            expect(user.password_recovery_token).to be_empty
+          end
         end
 
         context 'an invalid valid token is set' do
@@ -257,6 +264,13 @@ describe HasEditablePassword do
           it 'is not valid' do
             user.recovery_token = token
             expect(user.valid?(:update)).to be_false
+          end
+
+          it 'does not clear the stored token' do
+            user.recovery_token = token
+            user.password = 'new_secret'
+            user.valid?(:update)
+            expect(user.password_recovery_token).to_not be_empty
           end
         end
 

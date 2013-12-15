@@ -105,8 +105,13 @@ module HasEditablePassword
   ##
   # Validation called on :update when the password_digest is touched.
   # Sets an error on password unless the current_password or a valid recovery_token is set
+  # Also clears the password_recovery_token if it is verified, to preven token reuse.
   def password_change
-    errors[:password] << 'Unauthorized to change the password' unless allow_password_change?
+    if allow_password_change?
+      self.password_recovery_token = ''
+    else
+      errors[:password] << 'Unauthorized to change the password'
+    end
   end
 
   def changing_password
