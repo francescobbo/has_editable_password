@@ -136,23 +136,37 @@ describe HasEditablePassword do
     end
 
     context 'the creation is less than 24 hours ago' do
-      it 'returns false if the token is a random string' do
-        user.generate_recovery_token
-        user.recovery_token = "deadbeef"
-        expect(user.valid_recovery_token?).to be_false
+      context 'the argument is nil' do
+        it 'returns false if the stored token is a random string' do
+          user.generate_recovery_token
+          user.recovery_token = "deadbeef"
+          expect(user.valid_recovery_token?).to be_false
+        end
+
+        context 'the stored token is a base64 string' do
+          it 'returns false if the token does not match' do
+            user.generate_recovery_token
+            user.recovery_token = SecureRandom.urlsafe_base64
+            expect(user.valid_recovery_token?).to be_false
+          end
+
+          it 'returns true if the token matches' do
+            token = user.generate_recovery_token
+            user.recovery_token = token
+            expect(user.valid_recovery_token?).to be_true
+          end
+        end
       end
 
-      context 'the token is a base64 string' do
+      context 'the argument is not nil' do
         it 'returns false if the token does not match' do
           user.generate_recovery_token
-          user.recovery_token = SecureRandom.urlsafe_base64
-          expect(user.valid_recovery_token?).to be_false
+          expect(user.valid_recovery_token?(SecureRandom.urlsafe_base64)).to be_false
         end
 
         it 'returns true if the token matches' do
           token = user.generate_recovery_token
-          user.recovery_token = token
-          expect(user.valid_recovery_token?).to be_true
+          expect(user.valid_recovery_token?(token)).to be_true
         end
       end
     end

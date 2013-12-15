@@ -77,9 +77,8 @@ When submitting a password recovery form:
       # Accessed by email link
       def edit
         @user = User.find(params[:id])
-        @user.recovery_token = params[:token]
-          
-        if @user.valid_recovery_token?
+
+        if @user.valid_recovery_token?(params[:token])
           render :show
         else
           flash[:error] = "Invalid token"

@@ -50,11 +50,12 @@ module HasEditablePassword
   end
 
   ##
-  # Returns true if the +recovery_token+ matches with the stored one and the
+  # Returns true if the +token+ matches with the stored one and the
   # token creation time is less than 24 hours ago
   #
-  def valid_recovery_token?
-    recovery_token_match? and !recovery_token_expired?
+  # If +token+ is +nil+, the stored token is compared with +@recovery_token+
+  def valid_recovery_token?(token = nil)
+    recovery_token_match?(token) and !recovery_token_expired?
   end
 
   ##
@@ -81,10 +82,15 @@ module HasEditablePassword
   end
 
   ##
-  # True if recovery_token matches the stored token.
-  # False if there is no stored token too.
-  def recovery_token_match?
-    BCrypt::Password.new(self.password_recovery_token) == @recovery_token
+  # Compares password_recovery_token with:
+  # * @recovery_token if +token+ is nil
+  # * +token+ otherwise
+  #
+  # True if password_recovery_token matches.
+  # False if password_recovery_token is nil
+  # False if @recovery_token (or +token+) do not match the stored token
+  def recovery_token_match?(token = nil)
+    BCrypt::Password.new(self.password_recovery_token) == (token || @recovery_token)
   rescue
     false
   end
